@@ -25,7 +25,7 @@ print_step() {
 }
 
 # 配置
-REPO_URL="${REPO_URL:-https://raw.githubusercontent.com/serenez/fluffos-builder/main/}"
+REPO_URL="${REPO_URL:-https://raw.githubusercontent.com/serenez/fluffos-builder/main}"
 SCRIPT_NAME="build.sh"
 # 使用当前目录，除非用户指定了其他目录
 INSTALL_DIR="${INSTALL_DIR:-$(pwd)}"
@@ -72,15 +72,20 @@ download_script() {
     # 下载脚本到当前目录
     local script_url="$REPO_URL/$SCRIPT_NAME"
     print_info "下载地址: $script_url"
+    echo ""
+
     if command -v curl &> /dev/null; then
-        curl -fL "$script_url" -o "$SCRIPT_NAME"
+        # 显示进度条
+        curl -fL --progress-bar "$script_url" -o "$SCRIPT_NAME"
     elif command -v wget &> /dev/null; then
-        wget -qO "$SCRIPT_NAME" "$script_url"
+        # 显示下载进度
+        wget --progress=bar:force "$script_url" -O "$SCRIPT_NAME"
     else
         print_error "无法下载脚本"
         exit 1
     fi
 
+    echo ""
     # 添加可执行权限
     chmod +x "$SCRIPT_NAME"
 

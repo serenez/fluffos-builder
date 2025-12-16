@@ -734,20 +734,13 @@ compile() {
     NPROC=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo "4")
     print_info "使用 $NPROC 个并行任务进行编译"
 
-    # 编译
-    if ! make -j"$NPROC"; then
+    # 编译并安装（一步完成）
+    if ! make -j"$NPROC" install; then
         print_error "编译失败"
         exit 1
     fi
 
     print_info "编译完成！"
-
-    # 安装到 build 目录
-    print_info "执行 make install..."
-    if ! make install; then
-        print_error "安装失败"
-        exit 1
-    fi
 
     # 验证驱动程序是否存在
     if [ -f "bin/driver" ]; then
@@ -865,9 +858,10 @@ show_build_info() {
 
         print_info "使用方法:"
         print_info "  直接运行: $DRIVER_PATH <config_file>"
-
+        print_info "  或者将: $DRIVER_PATH 的driver文件复制到 mudlib目录下使用"
         if echo "$PATH" | grep -q "$INSTALL_DIR/bin" || echo "$PATH" | grep -q "$INSTALL_DIR"; then
-            print_info "  或直接运行: driver <config_file>"
+            print_info "  如果驱动复制到了/usr/local/bin后，可直接运行: driver <config_file>"
+
         else
             print_info ""
             print_info "添加到 PATH (可选):"

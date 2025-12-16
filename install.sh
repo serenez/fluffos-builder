@@ -25,7 +25,7 @@ print_step() {
 }
 
 # 配置
-REPO_URL="${REPO_URL:-https://raw.githubusercontent.com/YOUR_USERNAME/fluffos-builder/main}"
+REPO_URL="${REPO_URL:-https://raw.githubusercontent.com/serenez/fluffos-builder/main}"
 SCRIPT_NAME="build.sh"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/fluffos-builder}"
 
@@ -113,7 +113,7 @@ show_usage() {
 FluffOS 一键安装脚本
 
 用法:
-    bash <(curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/fluffos-builder/main/install.sh) [选项]
+    bash <(curl -fsSL https://raw.githubusercontent.com/serenez/fluffos-builder/main/install.sh) [选项]
 
 选项:
     -h, --help      显示帮助

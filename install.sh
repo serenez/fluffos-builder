@@ -25,9 +25,10 @@ print_step() {
 }
 
 # 配置
-REPO_URL="${REPO_URL:-https://raw.githubusercontent.com/serenez/fluffos-builder/main}"
+REPO_URL="${REPO_URL:-https://raw.githubusercontent.com/serenez/fluffos-builder/main/scripts}"
 SCRIPT_NAME="build.sh"
-INSTALL_DIR="${INSTALL_DIR:-$HOME/fluffos-builder}"
+# 使用当前目录，除非用户指定了其他目录
+INSTALL_DIR="${INSTALL_DIR:-$(pwd)}"
 
 # 显示欢迎信息
 show_banner() {
@@ -68,11 +69,7 @@ check_dependencies() {
 download_script() {
     print_step "下载编译脚本..."
 
-    # 创建安装目录
-    mkdir -p "$INSTALL_DIR"
-    cd "$INSTALL_DIR"
-
-    # 下载脚本
+    # 下载脚本到当前目录
     local script_url="$REPO_URL/$SCRIPT_NAME"
     print_info "下载地址: $script_url"
 
@@ -96,8 +93,6 @@ run_script() {
     print_step "运行编译脚本..."
     echo ""
 
-    cd "$INSTALL_DIR"
-
     # 传递所有参数给编译脚本
     if [ "$EUID" -ne 0 ]; then
         print_info "需要 root 权限，将使用 sudo 运行..."
@@ -113,7 +108,7 @@ show_usage() {
 FluffOS 一键安装脚本
 
 用法:
-    bash <(curl -fsSL https://raw.githubusercontent.com/serenez/fluffos-builder/main/install.sh) [选项]
+    bash <(curl -fL https://raw.githubusercontent.com/serenez/fluffos-builder/main/install.sh) [选项]
 
 选项:
     -h, --help      显示帮助
@@ -124,17 +119,17 @@ FluffOS 一键安装脚本
 
 环境变量:
     REPO_URL        仓库地址（默认: GitHub 主仓库）
-    INSTALL_DIR     安装目录（默认: $HOME/fluffos-builder）
+    INSTALL_DIR     安装目录（默认: 当前目录）
 
 示例:
     # 标准安装
-    bash <(curl -fsSL URL) -y
+    bash <(curl -fL https://raw.githubusercontent.com/serenez/fluffos-builder/main/install.sh) -y
 
     # 生产构建
-    bash <(curl -fsSL URL) -y --release
+    bash <(curl -fL https://raw.githubusercontent.com/serenez/fluffos-builder/main/install.sh) -y --release
 
-    # 指定安装目录
-    INSTALL_DIR=/opt/fluffos bash <(curl -fsSL URL)
+    # 使用 wget
+    bash <(wget -O- https://raw.githubusercontent.com/serenez/fluffos-builder/main/install.sh) -y
 
 EOF
 }

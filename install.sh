@@ -75,11 +75,11 @@ download_script() {
     echo ""
 
     if command -v curl &> /dev/null; then
-        # 显示进度条
-        curl -fL --progress-bar "$script_url" -o "$SCRIPT_NAME"
+        # 显示详细下载进度（% Total, % Received, Speed 等）
+        curl -fL "$script_url" -o "$SCRIPT_NAME"
     elif command -v wget &> /dev/null; then
-        # 显示下载进度
-        wget --progress=bar:force "$script_url" -O "$SCRIPT_NAME"
+        # 显示详细下载进度
+        wget "$script_url" -O "$SCRIPT_NAME"
     else
         print_error "无法下载脚本"
         exit 1

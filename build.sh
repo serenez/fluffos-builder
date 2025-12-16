@@ -698,42 +698,12 @@ configure_build() {
     # 根据需求选择构建类型
     BUILD_TYPE="${BUILD_TYPE:-RelWithDebInfo}"
 
-    # CMake 配置选项
+    # CMake 配置选项 - 使用与旧脚本相同的配置以保证速度
     CMAKE_OPTS=(
         -DCMAKE_BUILD_TYPE="$BUILD_TYPE"
-        -DCMAKE_INSTALL_PREFIX="$INSTALL_DIR"
+        -DPACKAGE_DB_SQLITE=2
+        -DPACKAGE_DB_DEFAULT_DB=2
     )
-
-    # 检查 jemalloc 是否可用
-    if ldconfig -p 2>/dev/null | grep -q libjemalloc; then
-        CMAKE_OPTS+=(-DUSE_JEMALLOC=ON)
-        print_info "启用 jemalloc 内存分配器"
-    else
-        print_warning "jemalloc 不可用，使用系统默认分配器"
-    fi
-
-    # 检查 SQLite 是否可用
-    if pkg-config --exists sqlite3 2>/dev/null; then
-        CMAKE_OPTS+=(-DPACKAGE_DB_SQLITE=2)
-        print_info "启用 SQLite 支持"
-    else
-        print_warning "SQLite 不可用，禁用数据库支持"
-    fi
-
-    # 如果是生产构建，添加额外选项
-    if [ "$BUILD_TYPE" == "Release" ]; then
-        CMAKE_OPTS+=(
-            -DSTATIC=ON
-            -DMARCH_NATIVE=OFF  # 关闭以提高可移植性
-        )
-        print_info "生产模式: 静态链接, 禁用 CPU 特定优化"
-    fi
-
-    # 如果是调试构建，可以启用 sanitizer
-    if [ "$BUILD_TYPE" == "Debug" ] && [ -n "$ENABLE_SANITIZER" ]; then
-        CMAKE_OPTS+=(-DENABLE_SANITIZER=ON)
-        print_info "启用地址消毒器 (Address Sanitizer)"
-    fi
 
     # 自定义选项（从环境变量读取）
     if [ -n "$CMAKE_EXTRA_OPTS" ]; then
@@ -743,7 +713,6 @@ configure_build() {
     fi
 
     print_info "构建类型: $BUILD_TYPE"
-    print_info "安装目录: $INSTALL_DIR"
     print_info "CMake 选项: ${CMAKE_OPTS[*]}"
 
     # 运行 CMake
@@ -812,57 +781,16 @@ install_driver() {
     print_info "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
 
-    # 询问用户是否安装到全局目录
-    if ask_yes_no "是否将驱动程序安装到全局目录 $INSTALL_DIR ？" "y"; then
-        SKIP_INSTALL=""
-
-        # 确保安装目录存在
-        mkdir -p "$INSTALL_DIR/bin" 2>/dev/null || mkdir -p "$INSTALL_DIR"
-        mkdir -p "$INSTALL_DIR/../share/fluffos" 2>/dev/null || true
-
-        # 安装驱动程序
-        if [ -d "$INSTALL_DIR/bin" ]; then
-            print_info "安装驱动程序到 $INSTALL_DIR/bin/driver"
-            cp -f bin/driver "$INSTALL_DIR/bin/driver"
-            chmod +x "$INSTALL_DIR/bin/driver"
-            DRIVER_PATH="$INSTALL_DIR/bin/driver"
-        else
-            print_info "安装驱动程序到 $INSTALL_DIR/driver"
-            cp -f bin/driver "$INSTALL_DIR/driver"
-            chmod +x "$INSTALL_DIR/driver"
-            DRIVER_PATH="$INSTALL_DIR/driver"
-        fi
-
-        # 尝试复制配置示例和文档
-        SHARE_DIR="$INSTALL_DIR/../share/fluffos"
-        if [ -f "$PROJECT_DIR/Config.example" ] && [ -d "$SHARE_DIR" ]; then
-            print_info "复制配置示例到 $SHARE_DIR/"
-            cp -f "$PROJECT_DIR/Config.example" "$SHARE_DIR/" 2>/dev/null || true
-        fi
-
-        if [ -d "$PROJECT_DIR/docs" ] && [ -d "$SHARE_DIR" ]; then
-            print_info "复制文档到 $SHARE_DIR/docs/"
-            cp -rf "$PROJECT_DIR/docs" "$SHARE_DIR/" 2>/dev/null || true
-        fi
-
-        # 创建版本信息文件
-        if [ -d "$SHARE_DIR" ]; then
-            cat > "$SHARE_DIR/VERSION" <<EOF
-FluffOS 驱动程序
-编译时间: $(date '+%Y-%m-%d %H:%M:%S')
-系统: $OS_NAME $OS_VERSION
-发行版: $DISTRO_TYPE
-构建类型: $BUILD_TYPE
-Git 提交: $(cd "$PROJECT_DIR" && git rev-parse --short HEAD 2>/dev/null || echo "unknown")
-Git 分支: $(cd "$PROJECT_DIR" && git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
-EOF
-        fi
-
-        print_info "✓ 全局安装完成！"
+    # 询问用户是否复制到 /usr/local/bin
+    if ask_yes_no "是否将驱动程序复制到 /usr/local/bin ？" "y"; then
+        print_info "复制驱动程序到 /usr/local/bin/driver"
+        cp -f bin/driver /usr/local/bin/driver
+        chmod +x /usr/local/bin/driver
+        print_info "✓ 驱动程序已复制到 /usr/local/bin/driver"
+        DRIVER_PATH="/usr/local/bin/driver"
     else
-        SKIP_INSTALL="1"
         DRIVER_PATH="$PROJECT_DIR/build/bin/driver"
-        print_info "跳过全局安装，驱动程序位于: $DRIVER_PATH"
+        print_info "驱动程序位于: $DRIVER_PATH"
     fi
 }
 
